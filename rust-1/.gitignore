@@ -1,0 +1,6 @@
+# Generated files
+target/
+
+Cargo.lock
+
+kv_store.txt
