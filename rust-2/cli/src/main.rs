@@ -1,15 +1,24 @@
 
 use kvstore::KeyValueStore;
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+struct  Args {
+    /// The file path to store the key-value pairs
+    file: String,
+    /// Use binary format
+    #[arg(short = 'b', long = "binary")]
+    binary: bool,
+}
+
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len()< 2 {
-        eprintln!("Usage: {} <filepath>", args[0]);
-        return;
-    }
-    let filepath = &args[1];
+    let args = Args::parse();
 
-    let mut kv_store = KeyValueStore::new(filepath);
+    let filepath = args.file.as_str();
+    let use_binary = args.binary;
+
+    let mut kv_store = KeyValueStore::new(filepath, use_binary);
 
     kv_store.set("name".to_string(), "John".to_string()).unwrap();
     kv_store.set("age".to_string(), "30".to_string()).unwrap();

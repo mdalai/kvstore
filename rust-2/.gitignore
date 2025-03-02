@@ -3,4 +3,4 @@ target/
 
 Cargo.lock
 
-kv_store.txt
+kv_store.*

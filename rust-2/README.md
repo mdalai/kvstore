@@ -32,5 +32,5 @@ kvstore_project/
     - `get(key: &str) -> Option<&String>`: Retrieves the value for a given key.
 
 - **CLI**:
-  - Takes a file path as a command-line argument to initialize the key-value store.
+  - Takes a file path as a command-line argument to initialize the key-value store. If provide `-b/--binary` as arg, will save file in binary format.
   - Demonstrates the usage of the `set` and `get` methods.

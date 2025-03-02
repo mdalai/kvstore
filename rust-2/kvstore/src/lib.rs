@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
-use std::io::{self, BufReader, BufRead, Write};
+use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
 
 
@@ -10,15 +10,23 @@ use std::path::Path;
 pub struct KeyValueStore {
     store: HashMap<String, String>,
     filepath: String,
+    use_binary: bool,
 }
 
 impl KeyValueStore {
     // new instance
-    pub fn new(filepath: &str) -> Self {
-        let store = Self::read_from_file(filepath).unwrap_or_else(|_| HashMap::new());
+    pub fn new(filepath: &str, use_binary: bool) -> Self {
+        let store;   
+        if use_binary {
+            store= Self::read_from_binary_file(filepath).unwrap_or_else(|_| HashMap::new());
+        } else {
+            store = Self::read_from_file(filepath).unwrap_or_else(|_| HashMap::new());
+        }
+        
         KeyValueStore {
             store,
             filepath: filepath.to_string(),
+            use_binary,
         }
     }
 
@@ -30,7 +38,7 @@ impl KeyValueStore {
         let file = File::open(filepath)?;
         let reader = BufReader::new(file);
         let mut store = HashMap::new();
-
+        
         for line in reader.lines(){
             let line= line?;
             let parts: Vec<&str> = line.splitn(2, ',').collect();
@@ -54,6 +62,25 @@ impl KeyValueStore {
         Ok(())
     }
 
+    fn read_from_binary_file(filepath: &str) -> io::Result<HashMap<String, String>> {
+        let file = File::open(filepath)?;
+        let reader = BufReader::new(file);
+        let store = bincode::deserialize_from(reader).unwrap();
+        Ok(store)
+    }
+
+    fn write_to_binary_file(&self) -> io::Result<()> {
+        let file = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .create(true)
+            .open(&self.filepath)?;
+
+        let writer = BufWriter::new(file);
+        bincode::serialize_into(writer, &self.store).unwrap();
+
+        Ok(())
+    }
 
     pub fn get(&self, key: &str) -> Option<&String> {
         self.store.get(key)
@@ -61,7 +88,11 @@ impl KeyValueStore {
 
     pub fn set(&mut self, key: String, value: String) -> io::Result<()> {
         self.store.insert(key, value);
-        self.write_to_file()
+        if self.use_binary {
+            self.write_to_binary_file()
+        } else {
+            self.write_to_file()
+        }
     }
 }
 
